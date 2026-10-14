@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Prime Course | Task Submission</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px 16px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 30px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+    }
+
+    .brand {
+      color: #2563eb;
+      font-weight: bold;
+      letter-spacing: 1px;
+      font-size: 13px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+
+    .description {
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin: 18px 0 8px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+      outline: 2px solid #93c5fd;
+      border-color: #2563eb;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 15px;
+      border: 0;
+      border-radius: 8px;
+      background: #1d4ed8;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    #status {
+      margin-top: 18px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .note {
+      margin-top: 22px;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 16px 10px;
+      }
+
+      .container {
+        padding: 22px 17px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <div class="brand">ENGLISH PRIME COURSE</div>
+    <h1>Student Task Submission</h1>
+
+    <p class="description">
+      Complete the form below to submit your English assignment.
+      Check your answers before submitting.
+    </p>
+
+    <form id="submissionForm">
+      <label for="studentName">Student's Full Name</label>
+      <input
+        id="studentName"
+        name="studentName"
+        type="text"
+        maxlength="100"
+        autocomplete="name"
+        required
+      >
+
+      <label for="className">Class</label>
+      <input
+        id="className"
+        name="className"
+        type="text"
+        maxlength="50"
+        placeholder="Example: Little Starter Junior"
+        required
+      >
+
+      <label for="writtenAnswer">Written Answer</label>
+      <textarea
+        id="writtenAnswer"
+        name="writtenAnswer"
+        maxlength="10000"
+        placeholder="Write your answer here..."
+        required
+      ></textarea>
+
+      <label for="videoUrl">Video Link</label>
+      <input
+        id="videoUrl"
+        name="videoUrl"
+        type="url"
+        maxlength="2048"
+        placeholder="https://..."
+        required
+      >
+
+      <p class="note">
+        Paste a shareable link to your video. Make sure your teacher
+        has permission to view it.
+      </p>
+
+      <button id="submitButton" type="submit">
+        Submit Assignment
+      </button>
+
+      <p id="status" role="status" aria-live="polite"></p>
+    </form>
+
+    <p class="note">
+      English Prime Course — A place to grow and learn.
+    </p>
+  </main>
+
+  <!-- Supabase JavaScript library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // 1. Replace these placeholders with your own project details.
+    const SUPABASE_URL = "https://strgnybjoguzhzshupwa.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_GYFo-qobrDEG1q1bLM2MRg_fn1qNoya";
+
+    const form = document.getElementById("submissionForm");
+    const button = document.getElementById("submitButton");
+    const status = document.getElementById("status");
+
+    let supabaseClient = null;
+
+    // 2. Connect to Supabase.
+    try {
+      if (
+        window.supabase &&
+        SUPABASE_URL.startsWith("https://") &&
+        !SUPABASE_URL.includes("YOUR_") &&
+        SUPABASE_KEY &&
+        !SUPABASE_KEY.includes("YOUR_")
+      ) {
+        supabaseClient = window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_KEY
+        );
+      }
+    } catch (error) {
+      console.error("Connection setup error:", error);
+    }
+
+    // 3. Save the student's submission.
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      if (!form.reportValidity()) return;
+
+      if (!supabaseClient) {
+        status.textContent =
+          "Setup incomplete. Please configure your Supabase URL and key.";
+        return;
+      }
+
+      const studentName =
+        document.getElementById("studentName").value.trim();
+
+      const className =
+        document.getElementById("className").value.trim();
+
+      const writtenAnswer =
+        document.getElementById("writtenAnswer").value.trim();
+
+      const videoUrl =
+        document.getElementById("videoUrl").value.trim();
+
+      // Accept HTTPS links only.
+      try {
+        const parsedUrl = new URL(videoUrl);
+
+        if (parsedUrl.protocol !== "https:") {
+          status.textContent =
+            "Please use a secure video link beginning with https://";
+          return;
+        }
+      } catch {
+        status.textContent = "Please enter a valid video link.";
+        return;
+      }
+
+      if (
+        !studentName ||
+        studentName.length > 100 ||
+        !className ||
+        className.length > 50 ||
+        !writtenAnswer ||
+        writtenAnswer.length > 10000 ||
+        videoUrl.length > 2048
+      ) {
+        status.textContent =
+          "Please check all fields and their maximum lengths.";
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "Submitting...";
+      status.textContent = "Sending your assignment...";
+
+      try {
+        const { error } = await supabaseClient
+          .from("student_submissions")
+          .insert({
+            student_name: studentName,
+            class_name: className,
+            written_answer: writtenAnswer,
+            video_url: videoUrl
+          });
+
+        if (error) throw error;
+
+        status.textContent =
+          "Your assignment has been submitted successfully!";
+
+        form.reset();
+      } catch (error) {
+        console.error("Submission error:", error);
+
+        status.textContent =
+          "Submission failed. Please check your connection or contact your teacher.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Submit Assignment";
+      }
+    });
+  </script>
+</body>
+</html>
